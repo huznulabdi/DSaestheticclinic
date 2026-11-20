@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="robots" content="noindex, nofollow"/>
+<title>Admin — DS Aesthetic Clinic</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --gold: #C9973E; --gold-deep: #9C7430; --cream: #FDFAF4; --ivory: #F5EED8;
+    --ink: #1C1A16; --mid: #6B5F4A; --line: #E6DCC6; --white: #fff;
+    --ok: #2E7D4F; --warn: #B3261E;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font: 15px/1.5 'Jost', system-ui, sans-serif; background: var(--cream); color: var(--ink); }
+  [hidden] { display: none !important; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--gold-deep); outline-offset: 2px; }
+
+  /* Tombol */
+  .btn { color: inherit; text-decoration: none; display: inline-block; border: 1px solid var(--line); background: var(--white); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+  .btn:hover { border-color: var(--gold); }
+  .btn.primary { background: var(--gold-deep); border-color: var(--gold-deep); color: #fff; }
+  .btn.primary:hover { background: #835F25; }
+  .btn.primary:disabled { opacity: .5; cursor: default; }
+  .btn.ghost { background: transparent; }
+  .btn.danger { color: var(--warn); }
+  .btn.sm { padding: 4px 10px; font-size: 13px; }
+
+  /* Login */
+  #login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+  .login-card { width: 100%; max-width: 380px; background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: 36px 32px; }
+  .login-card h1 { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; margin-bottom: 4px; }
+  .login-card h1 span { color: var(--gold); }
+  .login-card p.sub { color: var(--mid); margin-bottom: 24px; }
+  .login-card label { display: block; font-weight: 500; margin-bottom: 6px; }
+  .login-card input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; margin-bottom: 14px; }
+  .login-card .btn { width: 100%; padding: 11px; }
+  .msg-err { color: var(--warn); font-size: 14px; margin-bottom: 12px; }
+  .msg-note { background: var(--ivory); border-radius: 6px; padding: 10px 12px; font-size: 13px; color: var(--mid); margin-bottom: 14px; }
+
+  /* Kerangka aplikasi */
+  #app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+  .topbar { display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--white); border-bottom: 1px solid var(--line); }
+  .brand { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; letter-spacing: .5px; }
+  .brand span { color: var(--gold); }
+  .status { display: flex; align-items: center; gap: 8px; margin-left: 8px; font-size: 13px; color: var(--mid); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  .dirty .dot { background: var(--gold); }
+  .grow { flex: 1; }
+
+  .workspace { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 0; }
+  .workspace.with-preview { grid-template-columns: 220px minmax(0, 1fr) minmax(360px, 42vw); }
+
+  .side { overflow-y: auto; padding: 16px 10px 24px; border-right: 1px solid var(--line); background: var(--white); }
+  .side h3 { font-size: 13px; font-weight: 500; color: var(--mid); padding: 12px 10px 6px; }
+  .side button.nav { display: block; width: 100%; text-align: left; padding: 8px 10px; border: 0; background: none; border-radius: 6px; cursor: pointer; }
+  .side button.nav:hover { background: var(--ivory); }
+  .side button.nav[aria-current="true"] { background: var(--ivory); font-weight: 500; box-shadow: inset 3px 0 0 var(--gold); }
+  .side .reset-all { margin: 20px 10px 0; font-size: 13px; }
+
+  .main { overflow-y: auto; padding: 28px 32px 80px; }
+  .main-inner { max-width: 760px; }
+  .main h2 { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 600; line-height: 1.2; }
+  .main .lead { color: var(--mid); margin: 4px 0 20px; }
+  .section-tools { margin-bottom: 22px; }
+
+  .preview-pane { border-left: 1px solid var(--line); background: #e9e2d0; display: flex; flex-direction: column; min-height: 0; }
+  .preview-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--white); border-bottom: 1px solid var(--line); font-size: 13px; color: var(--mid); }
+  .preview-pane iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+
+  /* Form */
+  .field { margin-bottom: 18px; }
+  .field > label, .field > .lbl { display: block; font-weight: 500; margin-bottom: 5px; }
+  .hint { font-size: 13px; color: var(--mid); margin-top: 4px; }
+  .field input[type=text], .field select, .field textarea {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 6px; background: var(--white);
+  }
+  .field textarea { resize: vertical; line-height: 1.5; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); }
+  .field > label.check { display: flex; margin-bottom: 0; align-items: center; gap: 10px; cursor: pointer; padding: 8px 0; }
+  .field > label.check input { width: 18px; height: 18px; accent-color: var(--gold-deep); }
+  .color-row { display: flex; gap: 10px; align-items: center; }
+  .color-row input[type=color] { width: 44px; height: 38px; padding: 2px; border: 1px solid var(--line); border-radius: 6px; background: var(--white); cursor: pointer; }
+  .color-row input[type=text] { max-width: 130px; font-family: ui-monospace, monospace; }
+  .img-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .img-row .thumb { width: 72px; height: 72px; border-radius: 8px; border: 1px solid var(--line); background: var(--ivory) center / cover no-repeat; flex: none; }
+  .img-row .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .img-row input[type=text] { flex: 1 1 100%; }
+  .group { border-top: 1px solid var(--line); margin-top: 26px; padding-top: 6px; }
+  .group > h4 { font-size: 16px; font-weight: 500; margin: 14px 0; }
+
+  /* Daftar berulang */
+  .list-item { border: 1px solid var(--line); border-radius: 8px; background: var(--white); margin-bottom: 10px; }
+  .list-head { display: flex; align-items: center; gap: 6px; padding: 8px 10px 8px 14px; }
+  .list-head .t { flex: 1; min-width: 0; font-weight: 500; text-align: left; background: none; border: 0; cursor: pointer; padding: 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list-head .t small { color: var(--mid); font-weight: 400; margin-left: 8px; }
+  .list-head.off .t { opacity: .5; }
+  .list-body { padding: 6px 14px 4px; border-top: 1px solid var(--line); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  .grid2 .wide { grid-column: 1 / -1; }
+  .icon-btn { border: 1px solid transparent; background: none; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; color: var(--mid); }
+  .icon-btn:hover:not(:disabled) { border-color: var(--line); color: var(--ink); }
+  .icon-btn:disabled { opacity: .3; cursor: default; }
+  .empty { padding: 18px; text-align: center; color: var(--mid); border: 1px dashed var(--line); border-radius: 8px; margin-bottom: 10px; }
+
+  /* Notifikasi */
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 8px; font-size: 14px; max-width: 90vw; z-index: 50; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
+  #toast.err { background: var(--warn); }
+
+  /* Layar sempit: sidebar jadi baris atas, pratinjau jadi layar penuh */
+  @media (max-width: 1100px) {
+    .workspace.with-preview { grid-template-columns: 220px minmax(0, 1fr); }
+    .preview-pane { position: fixed; inset: 0; z-index: 40; border: 0; }
+  }
+  @media (max-width: 760px) {
+    #app { height: auto; min-height: 100vh; }
+    .workspace, .workspace.with-preview { grid-template-columns: 1fr; }
+    .side { display: flex; gap: 4px; overflow-x: auto; padding: 8px; border-right: 0; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+    .side h3, .side .reset-all { display: none; }
+    .side button.nav { width: auto; white-space: nowrap; }
+    .side button.nav[aria-current="true"] { box-shadow: inset 0 -3px 0 var(--gold); }
+    .main { padding: 20px 16px 80px; overflow: visible; }
+    .grid2 { grid-template-columns: 1fr; }
+    .topbar { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login" hidden>
+  <form class="login-card" id="loginForm">
+    <h1>DS <span>Aesthetic</span> Admin</h1>
+    <p class="sub">Masuk untuk mengubah isi website.</p>
+    <div class="msg-note" id="cfgNote" hidden></div>
+    <div class="msg-err" id="loginErr" role="alert" hidden></div>
+    <label for="pw">Password</label>
+    <input id="pw" type="password" autocomplete="current-password" required autofocus/>
+    <button class="btn primary" type="submit" id="loginBtn">Masuk</button>
+  </form>
+</div>
+
+<!-- ═══ APLIKASI ═══ -->
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="brand">DS <span>Aesthetic</span> Admin</div>
+    <div class="status" id="status"><span class="dot"></span><span id="statusTxt">Tersimpan</span></div>
+    <div class="grow"></div>
+    <button class="btn" id="btnPreview" aria-pressed="false">Pratinjau</button>
+    <a class="btn" href="/" target="_blank" rel="noopener">Buka website</a>
+    <button class="btn primary" id="btnSave" disabled>Simpan perubahan</button>
+    <button class="btn ghost" id="btnLogout">Keluar</button>
+  </header>
+  <div class="workspace" id="workspace">
+    <nav class="side" id="side" aria-label="Bagian website"></nav>
+    <main class="main" id="main"><div class="main-inner" id="form"></div></main>
+    <aside class="preview-pane" id="previewPane" hidden>
+      <div class="preview-head"><span>Pratinjau (belum disimpan)</span><button class="btn sm" id="btnClosePreview">Tutup</button></div>
+      <iframe id="frame" title="Pratinjau website"></iframe>
+    </aside>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Util ──────────────────────────────────────────────
+  const $ = (s) => document.querySelector(s);
+  function h(tag, props, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(props || {})) {
+      if (k === 'class') el.className = v;
+      else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
+      else if (v === true) el.setAttribute(k, '');
+      else if (v !== false && v != null) el.setAttribute(k, v);
+    }
+    kids.flat().forEach((c) => { if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(c)); });
+    return el;
+  }
+  const get = (o, p) => p.split('.').reduce((a, k) => (a == null ? a : a[k]), o);
+  const set = (o, p, v) => { const ks = p.split('.'); const last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; };
+  const clone = (x) => JSON.parse(JSON.stringify(x));
+  let uid = 0;
+  const nid = () => 'f' + (++uid);
+
+  async function api(path, opts) {
+    const res = await fetch(path, Object.assign({ credentials: 'same-origin', headers: { 'Content-Type': 'application/json' } }, opts));
+    if (res.status === 401 && path !== '/api/auth') { showLogin(); throw new Error('Sesi berakhir, silakan masuk lagi'); }
+    return res;
+  }
+
+  let toastTimer;
+  function toast(msg, isErr) {
+    const t = $('#toast'); t.textContent = msg; t.className = isErr ? 'err' : ''; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, isErr ? 6000 : 3500);
+  }
+
+  // ── Skema formulir ────────────────────────────────────
+  const RICH = 'Bungkus kata dengan *tanda bintang* agar tampil miring berwarna emas. Tekan Enter untuk baris baru.';
+  const WA_HINT = 'Teks yang sudah terisi otomatis saat pasien membuka WhatsApp.';
+  const T = (k, l, hint, o) => Object.assign({ k, l, hint, t: 'text' }, o);
+  const A = (k, l, hint, rows, o) => Object.assign({ k, l, hint, t: 'area', rows: rows || 3 }, o);
+  const WA = (k, l) => A(k || 'waText', l || 'Pesan WhatsApp otomatis', WA_HINT, 2);
+
+  const ANCHORS = [
+    ['#promos', 'Promo'], ['#services', 'Layanan'], ['#certifications', 'Sertifikasi'], ['#doctors', 'Dokter'],
+    ['#how', 'Cara memulai'], ['#testimonials', 'Testimoni'], ['#articles', 'Artikel'], ['#cta', 'Ajakan konsultasi'], ['#info', 'Info klinik'],
+  ];
+  const ANCHOR_SELECT = (k, l) => ({ k, l, t: 'select', options: ANCHORS });
+  const COLORS = (k, l, hint) => ({ k, l, hint, t: 'color' });
+  const SHOW = (k, l) => ({ k: 'show.' + k, l, t: 'check' });
+
+  const SCHEMA = [
+    { group: 'Pengaturan' },
+    { key: 'site', label: 'Umum & kontak', sel: null, lead: 'Nama klinik, nomor WhatsApp, dan kontak. Nomor WhatsApp di sini dipakai oleh semua tombol di website.', fields: [
+      T('name1', 'Nama klinik, bagian 1', 'Contoh: DS'),
+      T('name2', 'Nama klinik, bagian 2 (berwarna emas)', 'Contoh: Aesthetic'),
+      T('name3', 'Nama klinik, bagian 3', 'Contoh: Clinic'),
+      T('title', 'Judul di tab browser & Google'),
+      A('description', 'Deskripsi untuk Google', 'Sekitar 150 karakter.', 2),
+      T('whatsapp', 'Nomor WhatsApp', 'Format internasional tanpa + atau spasi, contoh 6285333444064. Awalan 0 otomatis diganti 62.', { fmt: 'wa' }),
+      T('phone', 'Nomor telepon (untuk tombol “Hubungi Kami”)', 'Contoh: 02112345678'),
+      T('phoneLabel', 'Tampilan nomor telepon di footer', 'Contoh: (021) 123-4567'),
+      T('email', 'Email'),
+      T('instagram', 'Username Instagram', 'Tanpa tanda @'),
+      A('floatWaText', 'Pesan tombol WhatsApp melayang', WA_HINT, 2),
+    ] },
+    { key: 'theme', label: 'Warna tema', sel: null, lead: 'Ubah palet warna seluruh website. Perubahan terlihat di pratinjau.', fields: [
+      COLORS('gold', 'Emas utama', 'Aksen, garis, ikon'),
+      COLORS('goldDeep', 'Emas tua', 'Tombol dan bayangan'),
+      COLORS('goldBright', 'Emas terang', 'Ujung gradasi'),
+      COLORS('goldLight', 'Emas muda', 'Teks aksen di bagian gelap'),
+      COLORS('goldPale', 'Emas pucat', 'Latar kartu'),
+      COLORS('cream', 'Latar halaman'),
+      COLORS('ivory', 'Latar bagian selang-seling'),
+      COLORS('charcoal', 'Teks utama & bagian gelap'),
+      COLORS('warmMid', 'Teks sekunder'),
+    ] },
+    { key: 'layout', label: 'Tampilkan bagian', sel: null, lead: 'Matikan bagian yang belum ingin ditampilkan. Isinya tidak dihapus.', fields: [
+      SHOW('trust', 'Bar kepercayaan (di bawah hero)'), SHOW('promos', 'Promo'), SHOW('services', 'Layanan'),
+      SHOW('certifications', 'Sertifikasi'), SHOW('doctors', 'Dokter'), SHOW('how', 'Cara memulai'),
+      SHOW('testimonials', 'Testimoni'), SHOW('articles', 'Artikel'), SHOW('cta', 'Ajakan konsultasi'), SHOW('info', 'Info klinik'),
+    ] },
+
+    { group: 'Isi halaman' },
+    { key: 'nav', label: 'Menu atas', sel: '#navbar', fields: [
+      { k: 'links', t: 'list', l: 'Tautan menu', add: 'Tambah tautan', title: (i) => i.label, fields: [T('label', 'Nama menu'), ANCHOR_SELECT('target', 'Menuju bagian')] },
+      T('ctaLabel', 'Teks tombol'), WA('ctaWaText'),
+    ] },
+    { key: 'hero', label: 'Hero (bagian paling atas)', sel: '#hero', fields: [
+      T('badge', 'Lencana'), T('promoTag', 'Pita promo'),
+      A('title', 'Judul besar', RICH, 3), A('sub', 'Sub-judul', '', 3),
+      { g: 'Kartu mengambang', fields: [T('statLeftLabel', 'Kartu kiri: label'), T('statLeftValue', 'Kartu kiri: nilai'), T('statRightLabel', 'Kartu kanan: label'), T('statRightValue', 'Kartu kanan: nilai')] },
+      { k: 'pills', t: 'list', l: 'Poin promo', add: 'Tambah poin', title: (i) => i.big, sub: (i) => i.small, fields: [T('big', 'Teks besar'), T('small', 'Keterangan')] },
+      { g: 'Tombol', fields: [T('ctaLabel', 'Tombol WhatsApp: teks'), WA('ctaWaText'), T('ctaSecondaryLabel', 'Tombol kedua: teks'), ANCHOR_SELECT('ctaSecondaryTarget', 'Tombol kedua menuju')] },
+    ] },
+    { key: 'trust', label: 'Bar kepercayaan', sel: '#trust', fields: [
+      { k: 'items', t: 'list', l: 'Poin kepercayaan', add: 'Tambah poin', title: (i) => i.title, sub: (i) => i.icon, fields: [T('icon', 'Ikon (emoji)'), T('title', 'Judul'), T('sub', 'Keterangan', '', { wide: true })] },
+    ] },
+    { key: 'promos', label: 'Promo', sel: '#promos', fields: [
+      T('label', 'Label kecil di atas judul'), A('title', 'Judul bagian', RICH, 2), T('btnLabel', 'Teks tombol pesan'),
+      { k: 'items', t: 'list', l: 'Kartu promo', add: 'Tambah promo', title: (i) => i.name, sub: (i) => i.price, off: (i) => !i.show, fields: [
+        { k: 'show', t: 'check', l: 'Tampilkan di website', wide: true },
+        T('badge', 'Lencana', 'Contoh: 🔥 Terlaris'), T('name', 'Nama paket'),
+        A('desc', 'Deskripsi', '', 2, { wide: true }),
+        T('price', 'Harga promo'), T('oldPrice', 'Harga coret'), T('discount', 'Label diskon'),
+        Object.assign(WA(), { wide: true }),
+      ] },
+    ] },
+    { key: 'services', label: 'Layanan', sel: '#services', fields: [
+      T('label', 'Label kecil di atas judul'), A('title', 'Judul bagian', RICH, 2),
+      { k: 'items', t: 'list', l: 'Daftar layanan', add: 'Tambah layanan', title: (i) => i.name, sub: (i) => i.icon, fields: [T('icon', 'Ikon (emoji)'), T('name', 'Nama layanan'), A('desc', 'Deskripsi singkat', '', 2, { wide: true })] },
+      { g: 'Tombol di bawah daftar', fields: [T('btnLabel', 'Teks tombol'), WA('btnWaText')] },
+    ] },
+    { key: 'certifications', label: 'Sertifikasi', sel: '#certifications', fields: [
+      T('label', 'Label kecil di atas judul'), A('title', 'Judul bagian', RICH, 2),
+      { k: 'items', t: 'list', l: 'Sertifikasi (nomor 01, 02, … otomatis)', add: 'Tambah sertifikasi', title: (i) => i.title, fields: [T('title', 'Judul', '', { wide: true }), A('desc', 'Keterangan', '', 2, { wide: true })] },
+    ] },
+    { key: 'doctors', label: 'Dokter', sel: '#doctors', fields: [
+      T('label', 'Label kecil di atas judul'), A('title', 'Judul bagian', RICH, 2),
+      { k: 'items', t: 'list', l: 'Daftar dokter', add: 'Tambah dokter', title: (i) => i.name, sub: (i) => i.spec, fields: [
+        T('name', 'Nama & gelar'), T('spec', 'Spesialisasi'),
+        { k: 'photo', t: 'image', l: 'Foto dokter (opsional)', hint: 'Unggah foto (JPG/PNG/WebP, dikecilkan otomatis) atau tempel alamat gambar https://. Jika kosong, ikon di bawah dipakai.', wide: true },
+        T('icon', 'Ikon pengganti foto (emoji)'), T('tags', 'Label', 'Pisahkan dengan koma. Contoh: 12 Thn Pengalaman, PERDOSKI'),
+        A('desc', 'Deskripsi', '', 2, { wide: true }),
+      ] },
+    ] },
+    { key: 'how', label: 'Cara memulai', sel: '#how', fields: [
+      T('label', 'Label kecil di atas judul'), A('title', 'Judul bagian', RICH, 2),
+      { k: 'steps', t: 'list', l: 'Langkah (nomor otomatis)', add: 'Tambah langkah', title: (i) => i.title, fields: [T('title', 'Judul langkah', '', { wide: true }), A('desc', 'Keterangan', '', 2, { wide: true })] },
+      { g: 'Tombol di bawah langkah', fields: [T('btnLabel', 'Teks tombol'), WA('btnWaText')] },
+    ] },
+    { key: 'testimonials', label: 'Testimoni', sel: '#testimonials', fields: [
+      T('label', 'Label kecil di atas judul'), A('title', 'Judul bagian', RICH, 2),
+      { k: 'items', t: 'list', l: 'Testimoni', add: 'Tambah testimoni', title: (i) => i.name, sub: (i) => i.detail, fields: [
+        T('name', 'Nama pasien'), T('detail', 'Keterangan', 'Contoh: Laser Treatment · Jakarta'),
+        T('avatar', 'Avatar (emoji)'), { k: 'stars', t: 'select', l: 'Bintang', options: [[5, '5'], [4, '4'], [3, '3'], [2, '2'], [1, '1']], num: true },
+        A('text', 'Isi testimoni', '', 4, { wide: true }),
+      ] },
+    ] },
+    { key: 'articles', label: 'Artikel', sel: '#articles', fields: [
+      T('label', 'Label kecil di atas judul'), A('title', 'Judul bagian', RICH, 2), T('linkLabel', 'Teks tautan di tiap artikel'),
+      { k: 'items', t: 'list', l: 'Artikel', add: 'Tambah artikel', title: (i) => i.title, sub: (i) => i.date, fields: [
+        T('icon', 'Ikon (emoji)'), T('tag', 'Kategori'),
+        T('title', 'Judul artikel', '', { wide: true }), A('desc', 'Ringkasan', '', 3, { wide: true }),
+        T('date', 'Tanggal tampil', 'Contoh: 12 Maret 2025'), Object.assign(WA(), {}),
+      ] },
+      { g: 'Tombol di bawah artikel', fields: [T('btnLabel', 'Teks tombol'), WA('btnWaText')] },
+    ] },
+    { key: 'cta', label: 'Ajakan konsultasi', sel: '#cta', fields: [
+      T('label', 'Label kecil di atas judul'), A('title', 'Judul', RICH, 2), A('desc', 'Deskripsi', '', 3),
+      T('waLabel', 'Teks tombol WhatsApp'), WA('waText'), T('callLabel', 'Teks tombol telepon'),
+    ] },
+    { key: 'info', label: 'Info klinik', sel: '#info', fields: [
+      T('label', 'Label kecil di atas judul'), A('title', 'Judul bagian', RICH, 2),
+      { k: 'cards', t: 'list', l: 'Kartu informasi', add: 'Tambah kartu', title: (i) => i.title, sub: (i) => i.icon, fields: [
+        T('icon', 'Ikon (emoji)'), T('title', 'Judul kartu'),
+        { k: 'format', t: 'select', l: 'Tampilan isi', options: [['list', 'Daftar bertanda'], ['text', 'Paragraf']], wide: true },
+        A('text', 'Isi', 'Satu baris = satu butir daftar (atau satu baris paragraf).', 5, { wide: true }),
+      ] },
+    ] },
+    { key: 'footer', label: 'Footer', sel: 'footer', fields: [
+      A('about', 'Deskripsi klinik', '', 3), T('servicesTitle', 'Judul kolom layanan'), T('contactTitle', 'Judul kolom kontak'),
+      { k: 'services', t: 'list', l: 'Tautan layanan', add: 'Tambah tautan', title: (i) => i.label, fields: [T('label', 'Nama layanan'), WA()] },
+      T('copyright', 'Teks hak cipta'), T('tagline', 'Teks penutup'),
+    ] },
+  ];
+
+  // ── Status ────────────────────────────────────────────
+  let data = null, defaults = null, dirty = false, current = 'site';
+  const opened = new WeakSet();
+
+  function setDirty(v) {
+    dirty = v;
+    $('#status').classList.toggle('dirty', v);
+    $('#statusTxt').textContent = v ? 'Ada perubahan yang belum disimpan' : 'Tersimpan';
+    $('#btnSave').disabled = !v;
+  }
+  function changed() { setDirty(true); schedulePreview(); }
+
+  // Kecilkan foto di browser (maks 1000px, JPEG) lalu kirim ke /api/upload
+  async function shrink(file, max) {
+    const bmp = await createImageBitmap(file);
+    const r = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(bmp.width * r)); c.height = Math.max(1, Math.round(bmp.height * r));
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+    return new Promise((ok, no) => c.toBlob((b) => (b ? ok(b) : no(new Error('Gagal memproses gambar'))), 'image/jpeg', 0.85));
+  }
+  async function uploadImage(file) {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Format harus JPG, PNG, atau WebP');
+    let blob;
+    try { blob = await shrink(file, 1000); } catch (e) { throw new Error('Gambar tidak dapat dibaca'); }
+    const res = await api('/api/upload?name=' + encodeURIComponent(file.name), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || 'Gagal mengunggah');
+    return j.url;
+  }
+
+  // ── Pembuat field ─────────────────────────────────────
+  function field(obj, f) {
+    const id = nid();
+    const wrap = h('div', { class: 'field' + (f.wide ? ' wide' : '') });
+    const label = (txt) => h('label', { for: id }, txt);
+    const hint = f.hint ? h('div', { class: 'hint' }, f.hint) : null;
+    const val = get(obj, f.k);
+
+    if (f.t === 'check') {
+      const cb = h('input', { type: 'checkbox', id, onchange: (e) => { set(obj, f.k, e.target.checked); changed(); } });
+      cb.checked = val !== false;
+      wrap.append(h('label', { class: 'check', for: id }, cb, f.l));
+      return wrap;
+    }
+    if (f.t === 'color') {
+      const txt = h('input', { type: 'text', id, value: val, maxlength: 7, 'aria-label': f.l + ' (kode hex)' });
+      const pick = h('input', { type: 'color', value: val, 'aria-label': f.l });
+      pick.addEventListener('input', () => { txt.value = pick.value; set(obj, f.k, pick.value); changed(); });
+      txt.addEventListener('input', () => {
+        if (/^#[0-9a-f]{6}$/i.test(txt.value)) { pick.value = txt.value; set(obj, f.k, txt.value); changed(); }
+      });
+      txt.addEventListener('blur', () => { txt.value = get(obj, f.k); });
+      wrap.append(...[label(f.l), h('div', { class: 'color-row' }, pick, txt), hint].filter(Boolean));
+      return wrap;
+    }
+    if (f.t === 'select') {
+      const sel = h('select', { id, onchange: (e) => { set(obj, f.k, f.num ? Number(e.target.value) : e.target.value); changed(); } },
+        f.options.map(([v, l]) => h('option', { value: v }, l)));
+      sel.value = String(val);
+      wrap.append(...[label(f.l), sel, hint].filter(Boolean));
+      return wrap;
+    }
+    if (f.t === 'area') {
+      const ta = h('textarea', { id, rows: f.rows || 3, oninput: (e) => { set(obj, f.k, e.target.value); changed(); } });
+      ta.value = val ?? '';
+      wrap.append(...[label(f.l), ta, hint].filter(Boolean));
+      return wrap;
+    }
+    if (f.t === 'image') {
+      const url = h('input', { type: 'text', id, placeholder: 'https://…', 'aria-label': f.l + ' (alamat gambar)' });
+      const thumb = h('div', { class: 'thumb', role: 'img', 'aria-label': 'Pratinjau foto' });
+      const fileIn = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', hidden: true });
+      const up = h('button', { class: 'btn sm', type: 'button' }, 'Unggah foto');
+      const rm = h('button', { class: 'btn sm', type: 'button' }, 'Hapus foto');
+      const paint = () => {
+        const v = get(obj, f.k) || '';
+        url.value = v; thumb.style.backgroundImage = v ? 'url("' + v.replace(/"/g, '%22') + '")' : 'none';
+        thumb.hidden = !v; rm.hidden = !v;
+      };
+      const setUrl = (v) => { set(obj, f.k, v); paint(); changed(); };
+      url.addEventListener('input', () => { set(obj, f.k, url.value.trim()); thumb.style.backgroundImage = /^https:\/\//.test(url.value) ? 'url("' + url.value.trim() + '")' : 'none'; thumb.hidden = !url.value; rm.hidden = !url.value; changed(); });
+      up.addEventListener('click', () => fileIn.click());
+      rm.addEventListener('click', () => setUrl(''));
+      fileIn.addEventListener('change', async () => {
+        const file = fileIn.files[0]; fileIn.value = '';
+        if (!file) return;
+        up.disabled = true; up.textContent = 'Mengunggah…';
+        try { setUrl(await uploadImage(file)); toast('Foto terunggah. Klik “Simpan perubahan” untuk menerapkannya.'); }
+        catch (e) { toast(e.message, true); }
+        up.disabled = false; up.textContent = 'Unggah foto';
+      });
+      paint();
+      wrap.append(...[label(f.l), h('div', { class: 'img-row' }, thumb, h('div', { class: 'acts' }, up, rm, fileIn), url), hint].filter(Boolean));
+      return wrap;
+    }
+    const inp = h('input', { type: 'text', id, oninput: (e) => { set(obj, f.k, e.target.value); changed(); } });
+    inp.value = val ?? '';
+    if (f.fmt === 'wa') {
+      inp.inputMode = 'numeric';
+      inp.addEventListener('change', () => {
+        let d = inp.value.replace(/\D/g, '');
+        if (d.startsWith('0')) d = '62' + d.slice(1);
+        inp.value = d; set(obj, f.k, d); changed();
+      });
+    }
+    wrap.append(...[label(f.l), inp, hint].filter(Boolean));
+    return wrap;
+  }
+
+  function fields(obj, list) {
+    const out = [];
+    let grid = null;
+    const flush = () => { if (grid) { out.push(grid); grid = null; } };
+    list.forEach((f) => {
+      if (f.g) { flush(); out.push(h('div', { class: 'group' }, h('h4', {}, f.g), fieldsGrid(obj, f.fields))); return; }
+      if (f.t === 'list') { flush(); out.push(listField(obj, f)); return; }
+      if (f.t === 'color' || f.t === 'check') { flush(); out.push(field(obj, f)); return; }
+      out.push(field(obj, f));
+    });
+    flush();
+    return out;
+  }
+  function fieldsGrid(obj, list) { return h('div', { class: 'grid2' }, list.map((f) => field(obj, f))); }
+
+  function blankFrom(tpl) {
+    const o = {};
+    for (const [k, v] of Object.entries(tpl)) o[k] = typeof v === 'boolean' ? true : typeof v === 'number' ? 5 : '';
+    if (tpl.format) o.format = 'list';
+    return o;
+  }
+
+  function listField(obj, f) {
+    const arr = get(obj, f.k);
+    const box = h('div', { class: 'field' });
+    const tpl = (get(defaults, currentDef().path + '.' + f.k) || [{}])[0];
+
+    function draw() {
+      box.replaceChildren(...[
+        h('span', { class: 'lbl' }, f.l),
+        arr.length ? null : h('div', { class: 'empty' }, 'Belum ada item. Klik tombol di bawah untuk menambah.'),
+        ...arr.map((it, i) => item(it, i)),
+        h('button', { class: 'btn', type: 'button', onclick: () => { const n = blankFrom(tpl); arr.push(n); opened.add(n); draw(); changed(); } }, '+ ' + f.add),
+      ].filter(Boolean));
+    }
+    function move(i, d) { const j = i + d; if (j < 0 || j >= arr.length) return; [arr[i], arr[j]] = [arr[j], arr[i]]; draw(); changed(); }
+
+    function item(it, i) {
+      const isOpen = opened.has(it);
+      const head = h('div', { class: 'list-head' + (f.off && f.off(it) ? ' off' : '') },
+        h('button', { class: 't', type: 'button', 'aria-expanded': String(isOpen), onclick: () => { isOpen ? opened.delete(it) : opened.add(it); draw(); } },
+          (isOpen ? '▾ ' : '▸ ') + (f.title(it) || '(belum diisi)'),
+          f.sub && f.sub(it) ? h('small', {}, f.sub(it)) : null),
+        h('button', { class: 'icon-btn', type: 'button', title: 'Naikkan', 'aria-label': 'Naikkan', disabled: i === 0, onclick: () => move(i, -1) }, '↑'),
+        h('button', { class: 'icon-btn', type: 'button', title: 'Turunkan', 'aria-label': 'Turunkan', disabled: i === arr.length - 1, onclick: () => move(i, 1) }, '↓'),
+        h('button', { class: 'icon-btn', type: 'button', title: 'Gandakan', 'aria-label': 'Gandakan', onclick: () => { const c = clone(it); arr.splice(i + 1, 0, c); opened.add(c); draw(); changed(); } }, '⧉'),
+        h('button', { class: 'icon-btn', type: 'button', title: 'Hapus', 'aria-label': 'Hapus', onclick: () => { if (confirm('Hapus item ini?')) { arr.splice(i, 1); draw(); changed(); } } }, '✕')
+      );
+      return h('div', { class: 'list-item' }, head, isOpen ? h('div', { class: 'list-body' }, fieldsGrid(it, f.fields)) : null);
+    }
+    draw();
+    return box;
+  }
+
+  const currentDef = () => ({ path: current });
+
+  // ── Tampilan ──────────────────────────────────────────
+  function renderSide() {
+    const side = $('#side');
+    side.replaceChildren();
+    SCHEMA.forEach((s) => {
+      if (s.group) { side.append(h('h3', {}, s.group)); return; }
+      side.append(h('button', { class: 'nav', type: 'button', 'aria-current': String(s.key === current),
+        onclick: () => { current = s.key; renderSide(); renderForm(); scrollPreview(s.sel); $('#main').scrollTop = 0; } }, s.label));
+    });
+    side.append(h('button', { class: 'btn sm danger reset-all', type: 'button', onclick: resetAll }, 'Kembalikan semua ke bawaan'));
+  }
+
+  function renderForm() {
+    const s = SCHEMA.find((x) => x.key === current);
+    const root = h('div', {},
+      h('h2', {}, s.label),
+      s.lead ? h('p', { class: 'lead' }, s.lead) : h('p', { class: 'lead' }, 'Ubah isi bagian ini, lalu klik “Simpan perubahan”.'),
+      h('div', { class: 'section-tools' },
+        h('button', { class: 'btn sm', type: 'button', onclick: () => {
+          if (!confirm('Kembalikan bagian “' + s.label + '” ke isi bawaan? Perubahan di bagian ini akan hilang.')) return;
+          data[s.key] = clone(defaults[s.key]); renderForm(); changed();
+        } }, 'Kembalikan bagian ini ke bawaan')),
+      ...fields(data[s.key], s.fields));
+    $('#form').replaceChildren(root);
+  }
+
+  // ── Pratinjau ─────────────────────────────────────────
+  let pvOpen = false, pvTimer = null, pvY = 0, pvToken = 0;
+  function setPreview(on) {
+    pvOpen = on;
+    $('#previewPane').hidden = !on;
+    $('#workspace').classList.toggle('with-preview', on);
+    $('#btnPreview').setAttribute('aria-pressed', String(on));
+    if (on) { refreshPreview(); }
+  }
+  function schedulePreview() { if (!pvOpen) return; clearTimeout(pvTimer); pvTimer = setTimeout(refreshPreview, 500); }
+  async function refreshPreview() {
+    const tok = ++pvToken;
+    const frame = $('#frame');
+    try { pvY = frame.contentWindow ? frame.contentWindow.scrollY : pvY; } catch (e) {}
+    try {
+      const res = await api('/api/preview', { method: 'POST', body: JSON.stringify({ content: data }) });
+      if (tok !== pvToken || !res.ok) return;
+      const html = await res.text();
+      frame.onload = () => { try { frame.contentWindow.scrollTo({ top: pvY, behavior: 'instant' }); } catch (e) {} };
+      frame.srcdoc = html;
+    } catch (e) { /* diabaikan: pratinjau bersifat opsional */ }
+  }
+  function scrollPreview(sel) {
+    if (!pvOpen || !sel) return;
+    setTimeout(() => { try { const el = $('#frame').contentDocument.querySelector(sel); if (el) el.scrollIntoView({ behavior: 'smooth' }); } catch (e) {} }, 250);
+  }
+
+  // ── Aksi ──────────────────────────────────────────────
+  async function load() {
+    const res = await api('/api/content');
+    const j = await res.json();
+    data = j.content; defaults = j.defaults;
+    if (j.dbError) toast('Database belum terhubung: ' + j.dbError, true);
+    setDirty(false);
+    renderSide(); renderForm();
+  }
+
+  async function save() {
+    const btn = $('#btnSave'); btn.disabled = true; btn.textContent = 'Menyimpan…';
+    try {
+      const res = await api('/api/content', { method: 'PUT', body: JSON.stringify({ content: data }) });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || 'Gagal menyimpan');
+      // Render ulang hanya bila server mengubah data (agar item yang terbuka tidak menutup sendiri)
+      if (JSON.stringify(j.content) !== JSON.stringify(data)) { data = j.content; renderForm(); }
+      setDirty(false);
+      toast('Perubahan disimpan. Website publik akan menampilkannya dalam sekitar 15 detik.');
+    } catch (e) { toast(e.message, true); btn.disabled = false; }
+    btn.textContent = 'Simpan perubahan';
+  }
+
+  async function resetAll() {
+    if (!confirm('Kembalikan SEMUA isi website ke bawaan? Isi yang sudah Anda ubah akan hilang.')) return;
+    try {
+      const res = await api('/api/content', { method: 'DELETE' });
+      if (!res.ok) throw new Error((await res.json()).error || 'Gagal mengembalikan');
+      await load(); schedulePreview(); toast('Semua isi dikembalikan ke bawaan.');
+    } catch (e) { toast(e.message, true); }
+  }
+
+  async function logout() {
+    if (dirty && !confirm('Ada perubahan yang belum disimpan. Keluar tanpa menyimpan?')) return;
+    dirty = false; await fetch('/api/auth', { method: 'DELETE', credentials: 'same-origin' }); showLogin();
+  }
+
+  function showLogin(note) {
+    $('#app').hidden = true; $('#login').hidden = false; setPreview(false);
+    if (note) { $('#cfgNote').textContent = note; $('#cfgNote').hidden = false; }
+    setTimeout(() => $('#pw').focus(), 0);
+  }
+  async function showApp() { $('#login').hidden = true; $('#app').hidden = false; await load(); }
+
+  $('#loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = $('#loginErr'); err.hidden = true;
+    const btn = $('#loginBtn'); btn.disabled = true; btn.textContent = 'Memeriksa…';
+    try {
+      const res = await fetch('/api/auth', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('#pw').value }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) { err.textContent = j.error || 'Gagal masuk'; err.hidden = false; }
+      else { $('#pw').value = ''; await showApp(); }
+    } catch (x) { err.textContent = 'Tidak dapat terhubung ke server'; err.hidden = false; }
+    btn.disabled = false; btn.textContent = 'Masuk';
+  });
+
+  $('#btnSave').addEventListener('click', save);
+  $('#btnLogout').addEventListener('click', logout);
+  $('#btnPreview').addEventListener('click', () => setPreview(!pvOpen));
+  $('#btnClosePreview').addEventListener('click', () => setPreview(false));
+  window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); if (dirty) save(); } });
+
+  // ── Mulai ─────────────────────────────────────────────
+  (async function init() {
+    try {
+      const j = await (await fetch('/api/auth', { credentials: 'same-origin' })).json();
+      if (j.authenticated) await showApp();
+      else showLogin(j.configured ? null : 'Server belum dikonfigurasi: atur ADMIN_PASSWORD dan SESSION_SECRET di Vercel (Settings → Environment Variables), lalu deploy ulang.');
+    } catch (e) { showLogin('Tidak dapat menghubungi server.'); }
+  })();
+})();
+</script>
+</body>
+</html>
